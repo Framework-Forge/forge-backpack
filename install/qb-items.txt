@@ -1,0 +1,41 @@
+qb-inventory / qb-core — adicione em shared/items.lua
+
+useable = true e unique = true sao obrigatorios.
+
+['backpack'] = {
+    name = 'backpack',
+    label = 'Small Backpack',
+    weight = 1000,
+    type = 'item',
+    image = 'backpack.png',
+    unique = true,
+    useable = true,
+    shouldClose = true,
+    description = 'Mochila pequena com stash privado'
+},
+
+['large_backpack'] = {
+    name = 'large_backpack',
+    label = 'Large Backpack',
+    weight = 1500,
+    type = 'item',
+    image = 'large_backpack.png',
+    unique = true,
+    useable = true,
+    shouldClose = true,
+    description = 'Mochila grande com senha'
+},
+
+['evidence_backpack'] = {
+    name = 'evidence_backpack',
+    label = 'Evidence Backpack',
+    weight = 1500,
+    type = 'item',
+    image = 'evidence_backpack.png',
+    unique = true,
+    useable = true,
+    shouldClose = true,
+    description = 'Mochila de evidencias (policia)'
+},
+
+Imagens: qb-inventory/html/images/backpack.png (etc.)

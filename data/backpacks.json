@@ -1,0 +1,200 @@
+{
+    "profiles": {
+        "master_mind": {
+            "allowCivilians": true,
+            "slots": 80,
+            "weight": 80000,
+            "jobLock": false,
+            "shopEnabled": true,
+            "openTime": 3000,
+            "label": "Backpack Master Mind",
+            "itemModel": "large_backpack",
+            "price": 200,
+            "fixedCode": "123"
+        },
+        "mochila_teste": {
+            "allowCivilians": true,
+            "slots": 30,
+            "weight": 30,
+            "fixedCode": false,
+            "shopEnabled": true,
+            "jobLock": false,
+            "label": "Mochila pequena de teste",
+            "openTime": 5000,
+            "price": 90,
+            "itemModel": "backpack"
+        },
+        "evidence_police": {
+            "allowCivilians": false,
+            "slots": 30,
+            "weight": 200000,
+            "fixedCode": false,
+            "shopEnabled": false,
+            "jobLock": [
+                "police"
+            ],
+            "label": "Evidence Backpack",
+            "openTime": 6000,
+            "price": 2000,
+            "itemModel": "evidence_backpack"
+        },
+        "small_civilian": {
+            "allowCivilians": true,
+            "slots": 30,
+            "weight": 100000,
+            "fixedCode": false,
+            "shopEnabled": true,
+            "jobLock": false,
+            "label": "Small Backpack",
+            "openTime": 5000,
+            "price": 500,
+            "itemModel": "backpack"
+        },
+        "large_secured": {
+            "allowCivilians": true,
+            "slots": 50,
+            "weight": 500000,
+            "fixedCode": "123",
+            "shopEnabled": true,
+            "jobLock": false,
+            "label": "Large Backpack",
+            "openTime": 6000,
+            "price": 1200,
+            "itemModel": "large_backpack"
+        }
+    },
+    "itemModels": {
+        "large_backpack": {
+            "clothing": {
+                "male": {
+                    "component": 5,
+                    "drawable": 82,
+                    "texture": 0
+                },
+                "female": {
+                    "component": 5,
+                    "drawable": 82,
+                    "texture": 0
+                }
+            },
+            "props": {
+                "male": "p_ld_heist_bag_s_pro2_s",
+                "female": "p_ld_heist_bag_s_pro2_s"
+            },
+            "propSettings": {
+                "male": {
+                    "rz": 180.0,
+                    "y": -0.18,
+                    "x": -0.17,
+                    "bone": 24818,
+                    "z": -0.02,
+                    "rx": 0.0,
+                    "ry": 90.0
+                },
+                "female": {
+                    "rz": 180.0,
+                    "y": -0.18,
+                    "x": -0.17,
+                    "bone": 24818,
+                    "z": -0.02,
+                    "rx": 0.0,
+                    "ry": 90.0
+                }
+            },
+            "label": "Large Backpack Model",
+            "anim": {
+                "clip": "try_tie_positive_a",
+                "flag": 49,
+                "dict": "clothingtie"
+            }
+        },
+        "backpack": {
+            "clothing": {
+                "male": {
+                    "component": 5,
+                    "drawable": 66,
+                    "texture": 0
+                },
+                "female": {
+                    "component": 5,
+                    "drawable": 45,
+                    "texture": 0
+                }
+            },
+            "props": {
+                "male": "p_michael_backpack_s",
+                "female": "p_michael_backpack_s"
+            },
+            "propSettings": {
+                "male": {
+                    "rz": 175.0,
+                    "y": -0.15,
+                    "x": 0.07,
+                    "bone": 24818,
+                    "z": -0.05,
+                    "rx": 0.0,
+                    "ry": 90.0
+                },
+                "female": {
+                    "rz": 175.0,
+                    "y": -0.14,
+                    "x": 0.05,
+                    "bone": 24818,
+                    "z": -0.06,
+                    "rx": 0.0,
+                    "ry": 90.0
+                }
+            },
+            "label": "Small Backpack Model",
+            "anim": {
+                "clip": "try_tie_positive_a",
+                "flag": 49,
+                "dict": "clothingtie"
+            }
+        },
+        "evidence_backpack": {
+            "clothing": {
+                "male": {
+                    "component": 5,
+                    "drawable": 41,
+                    "texture": 0
+                },
+                "female": {
+                    "component": 5,
+                    "drawable": 41,
+                    "texture": 0
+                }
+            },
+            "props": {
+                "male": "p_michael_backpack_s",
+                "female": "p_michael_backpack_s"
+            },
+            "propSettings": {
+                "male": {
+                    "rz": 175.0,
+                    "y": -0.15,
+                    "x": 0.07,
+                    "bone": 24818,
+                    "z": -0.05,
+                    "rx": 0.0,
+                    "ry": 90.0
+                },
+                "female": {
+                    "rz": 175.0,
+                    "y": -0.14,
+                    "x": 0.05,
+                    "bone": 24818,
+                    "z": -0.06,
+                    "rx": 0.0,
+                    "ry": 90.0
+                }
+            },
+            "label": "Evidence Backpack Model",
+            "anim": {
+                "clip": "try_tie_positive_a",
+                "flag": 49,
+                "dict": "clothingtie"
+            }
+        }
+    }
+}

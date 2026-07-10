@@ -1,0 +1,56 @@
+ox_inventory — adicione em data/items.lua
+
+O forge-backpack registra o "usar item" automaticamente.
+NAO precisa de client.event no item.
+
+
+['backpack'] = {
+    label = 'Small Backpack',
+    weight = 1000,
+    stack = false,
+    close = true,
+    description = 'Mochila pequena com stash privado',
+    consume = 0,
+    buttons = {
+        {
+            label = 'Alterar Senha',
+            action = function(slot)
+                TriggerEvent('forge-backpack:client:changePasswordFromMenu', slot)
+            end
+        }
+    }
+},
+['large_backpack'] = {
+    label = 'Large Backpack',
+    weight = 1500,
+    stack = false,
+    close = true,
+    description = 'Mochila grande com senha',
+    consume = 0,
+    buttons = {
+        {
+            label = 'Alterar Senha',
+            action = function(slot)
+                TriggerEvent('forge-backpack:client:changePasswordFromMenu', slot)
+            end
+        }
+    }
+},
+['evidence_backpack'] = {
+    label = 'Evidence Backpack',
+    weight = 1500,
+    stack = false,
+    close = true,
+    description = 'Mochila de evidencias (policia)',
+    consume = 0,
+    buttons = {
+        {
+            label = 'Alterar Senha',
+            action = function(slot)
+                TriggerEvent('forge-backpack:client:changePasswordFromMenu', slot)
+            end
+        }
+    }
+},
+
+Imagens: ox_inventory/web/images/backpack.png (etc.)
