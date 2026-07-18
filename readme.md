@@ -127,7 +127,7 @@ Entrega uma mochila para o admin com metadata aplicada.
 
 ```
 /testemochila backpack small_civilian
-/testemochila large_backpack large_secured
+/testemochila large_backpack large_secured [password]
 /testemochila backpack
 ```
 
