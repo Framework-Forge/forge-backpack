@@ -163,6 +163,7 @@ end
 local function isAdmin(src)
     if src == 0 then return true end
     return IsPlayerAceAllowed(src, Config.AdminAce)
+        or (Config.ParentAdminAce and IsPlayerAceAllowed(src, Config.ParentAdminAce))
         or IsPlayerAceAllowed(src, ("command.%s"):format(Config.AdminCommand))
 end
 
@@ -182,6 +183,83 @@ function forgeBackpackGetResolvedFromItem(item)
     return forgeBackpack.ResolveFromItem(item, BackpackProfiles, ItemModels)
 end
 
+local function getCarryLimit()
+    if Config.LimitBackpacks ~= true then return nil end
+
+    local limit = math.floor(tonumber(Config.MaxBackpack) or 0)
+    if limit < 1 then return nil end
+    return limit
+end
+
+local function countInventoryBackpacks(inventory)
+    local items = pr_lib.inventory.GetInventoryItems(inventory) or {}
+    local count = 0
+
+    for _, item in pairs(items) do
+        if type(item) == "table" and forgeBackpack.IsItemModel(item.name, ItemModels) then
+            count = count + math.max(0, math.floor(tonumber(item.count) or 1))
+        end
+    end
+
+    return count
+end
+
+function forgeBackpackCanCarry(inventory, itemName, count, removingItem)
+    local limit = getCarryLimit()
+    if not limit or not forgeBackpack.IsItemModel(itemName, ItemModels) then
+        return true, nil, limit
+    end
+
+    local current = countInventoryBackpacks(inventory)
+    if type(removingItem) == "table" and forgeBackpack.IsItemModel(removingItem.name, ItemModels) then
+        current = math.max(0, current - math.max(0, math.floor(tonumber(removingItem.count) or 1)))
+    end
+
+    local incoming = math.max(1, math.floor(tonumber(count) or 1))
+    return current + incoming <= limit, current, limit
+end
+
+local function notifyCarryLimit(source, limit)
+    source = tonumber(source)
+    if not source or source <= 0 then return end
+
+    pr_lib.notifications.Notify(source, {
+        description = lang("notify.backpack_limit", { max = limit or Config.MaxBackpack }),
+        type = "error"
+    })
+end
+
+exports("CanCarryBackpack", function(inventory, itemName, count, removingItem)
+    return forgeBackpackCanCarry(inventory, itemName, count, removingItem)
+end)
+
+local function registerCarryLimitHooks()
+    if Config.LimitBackpacks ~= true or not pr_lib.inventory.RegisterHook then return end
+
+    pr_lib.inventory.RegisterHook("swapItems", function(payload)
+        if payload.toType ~= "player" or payload.fromInventory == payload.toInventory then return end
+
+        local incoming = payload.fromSlot
+        if type(incoming) ~= "table" or not forgeBackpack.IsItemModel(incoming.name, ItemModels) then return end
+
+        local removing = payload.action == "swap" and type(payload.toSlot) == "table" and payload.toSlot or nil
+        local allowed, _, limit = forgeBackpackCanCarry(payload.toInventory, incoming.name, payload.count, removing)
+        if allowed then return end
+
+        notifyCarryLimit(payload.source, limit)
+        return false
+    end)
+
+    pr_lib.inventory.RegisterHook("buyItem", function(payload)
+        if not forgeBackpack.IsItemModel(payload.itemName, ItemModels) then return end
+
+        local allowed, _, limit = forgeBackpackCanCarry(payload.toInventory or payload.source, payload.itemName, payload.count)
+        if allowed then return end
+
+        notifyCarryLimit(payload.source, limit)
+        return false
+    end)
+end
 local function saveData()
     SaveResourceFile(resourceName, DATA_FILE, json.encode({
         itemModels = ItemModels,
@@ -366,6 +444,7 @@ end
 CreateThread(function()
     forgeBackpackLoad()
     registerAllUsableItems()
+    registerCarryLimitHooks()
     syncData()
 end)
 

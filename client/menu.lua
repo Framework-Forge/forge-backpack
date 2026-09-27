@@ -18,6 +18,8 @@ local editingModel = nil
 local openEditProfileMenu
 local openEditModelMenu
 local saveCurrentProfile
+local adminParentMenu = nil
+local adminParentResource = nil
 
 local function notify(description, notifyType)
     pr_lib.notifications.Notify({
@@ -26,11 +28,12 @@ local function notify(description, notifyType)
     })
 end
 
-local function showContext(id, title, menu, options)
+local function showContext(id, title, menu, options, menuResource)
     pr_lib.menus.RegisterContext({
         id = id,
         title = title,
         menu = menu,
+        menuResource = menuResource,
         options = options
     })
     pr_lib.menus.ShowContext(id)
@@ -830,7 +833,18 @@ function openItemModelsMenu()
     showContext(MENU_MODELS, lang("admin.models_title"), MENU_MAIN, options)
 end
 
-function openBackpackAdminMenu()
+function openBackpackAdminMenu(parentMenu, parentResource)
+    adminParentMenu = parentMenu
+    adminParentResource = parentResource
+
+    if adminParentMenu and not adminParentResource then
+        adminParentResource = GetInvokingResource()
+    end
+
+    if adminParentResource == GetCurrentResourceName() then
+        adminParentResource = nil
+    end
+
     local isAdmin = pr_lib.callback.await("forge-backpack:server:isAdmin", 5000)
     if not isAdmin then
         notify(lang("notify.no_admin_permission"), "error")
@@ -844,7 +858,7 @@ function openBackpackAdminMenu()
         Backpacks = BackpackProfiles
     end
 
-    showContext(MENU_MAIN, lang("admin.main_title"), nil, {
+    showContext(MENU_MAIN, lang("admin.main_title"), adminParentMenu, {
         {
             title = lang("admin.manage_title"),
             description = lang("admin.manage_desc"),
@@ -873,18 +887,22 @@ function openBackpackAdminMenu()
                 ItemModels = synced.itemModels or ItemModels
                 Backpacks = BackpackProfiles
                 notify(lang("notify.reload_success"), "success")
-                openBackpackAdminMenu()
+                openBackpackAdminMenu(adminParentMenu, adminParentResource)
             end
         }
-    })
+    }, adminParentResource)
 end
 
 pr_lib.addCommand(Config.AdminCommand, {
     help = lang("command.backpackadmin_help")
 }, function()
-    openBackpackAdminMenu()
+    openBackpackAdminMenu(nil)
 end)
 
-pr_lib.callback.register("forge-backpack:client:openAdminMenu", function(src)
-    openBackpackAdminMenu()
+exports('OpenAdminMenu', function(parentMenu, parentResource)
+    openBackpackAdminMenu(parentMenu, parentResource)
+end)
+
+pr_lib.callback.register("forge-backpack:client:openAdminMenu", function(parentMenu, parentResource)
+    openBackpackAdminMenu(parentMenu, parentResource)
 end)

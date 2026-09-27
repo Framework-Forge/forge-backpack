@@ -4,6 +4,8 @@ local pendingBag = nil
 local currentBagProp = nil
 local currentPropModel = nil
 local currentClothing = nil
+local previewActive = false
+local refreshGeneration = 0
 
 BackpackProfiles = BackpackProfiles or {}
 ItemModels = ItemModels or {}
@@ -33,7 +35,8 @@ local function ApplyBackpackClothing(bagConfig)
 
     if not clothing then return end
 
-    if currentClothing ~= clothing.drawable then
+    if GetPedDrawableVariation(ped, clothing.component) ~= clothing.drawable
+        or GetPedTextureVariation(ped, clothing.component) ~= clothing.texture then
         SetPedComponentVariation(
             ped,
             clothing.component,
@@ -41,8 +44,8 @@ local function ApplyBackpackClothing(bagConfig)
             clothing.texture,
             0
         )
-        currentClothing = clothing.drawable
     end
+    currentClothing = clothing.drawable
 end
 
 local function ApplyBackpackProp(bagConfig)
@@ -52,7 +55,8 @@ local function ApplyBackpackProp(bagConfig)
     local propModel = bagConfig.props[gender]
     local settings = bagConfig.propSettings[gender]
 
-    if propModel ~= currentPropModel then
+    if propModel ~= currentPropModel or not currentBagProp
+        or not DoesEntityExist(currentBagProp) or not IsEntityAttachedToEntity(currentBagProp, ped) then
         ResetBackpack()
         local modelHash = joaat(propModel)
         RequestModel(modelHash)
@@ -71,9 +75,6 @@ local function ApplyBackpackProp(bagConfig)
     end
 end
 
-RegisterNetEvent('illenium-appearance:client:reloadSkin', ResetBackpack)
-RegisterNetEvent('qb-clothing:client:reloadSkin', ResetBackpack)
-AddEventHandler('playerSpawned', ResetBackpack)
 
 CreateThread(function()
     local coords = Config.BackpackShop.coords
@@ -118,6 +119,8 @@ CreateThread(function()
 end)
 
 local function RefreshBackpack()
+    if previewActive then return end
+    if not pr_lib.framework.IsPlayerLoaded() then return end
     local items = pr_lib.inventory.GetPlayerItems and pr_lib.inventory.GetPlayerItems() or {}
 
     for _, item in pairs(items) do
@@ -187,8 +190,10 @@ AddEventHandler("forge-backpack:openShopMenu", function()
     pr_lib.menus.ShowContext("backpack_shop")
 end)
 
-pr_lib.callback.register('forge-backpack:client:use', function(src, data)
-    local slot = data.slot
+pr_lib.callback.register('forge-backpack:client:use', function(data)
+    if type(data) ~= 'table' or not tonumber(data.slot) then return false end
+
+    local slot = tonumber(data.slot)
     local success, bagConfig = pr_lib.callback.await('forge-backpack:server:requestOpen', 5000, slot)
     if not success or not bagConfig then return end
 
@@ -329,14 +334,35 @@ AddEventHandler('forge-backpack:openStash', function(stashId)
     })
 end)
 
-RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
-    Wait(4000)
+-- O inventario e a aparencia podem terminar de carregar depois do evento de login.
+local function RefreshAfterSpawn()
+    refreshGeneration = refreshGeneration + 1
+    local generation = refreshGeneration
+    CreateThread(function()
+        for _ = 1, 20 do
+            Wait(1000)
+            if generation ~= refreshGeneration then return end
+            RefreshBackpack()
+        end
+    end)
+end
+
+AddEventHandler('pr_bridge:client:OnPlayerLoaded', RefreshAfterSpawn)
+AddEventHandler('pr_bridge:client:OnInventoryChanged', function()
     RefreshBackpack()
 end)
-
-RegisterNetEvent('QBCore:Player:SetPlayerData', function()
-    Wait(500)
-    RefreshBackpack()
+AddEventHandler('pr_bridge:client:OnPlayerUnloaded', function()
+    refreshGeneration = refreshGeneration + 1
+    previewActive = false
+    ResetBackpack()
+end)
+AddEventHandler('playerSpawned', RefreshAfterSpawn)
+RegisterNetEvent('illenium-appearance:client:reloadSkin', RefreshAfterSpawn)
+RegisterNetEvent('qb-clothing:client:reloadSkin', RefreshAfterSpawn)
+AddEventHandler('onResourceStop', function(resource)
+    if resource ~= GetCurrentResourceName() then return end
+    refreshGeneration = refreshGeneration + 1
+    ResetBackpack()
 end)
 
 AddEventHandler('forge-backpack:client:changePasswordFromMenu', function(data)
@@ -397,14 +423,14 @@ local function applySyncData(data)
     RefreshBackpack()
 end
 
-pr_lib.callback.register('forge-backpack:client:syncData', function(src, data)
+pr_lib.callback.register('forge-backpack:client:syncData', function(data)
     applySyncData(data)
 end)
-pr_lib.callback.register('forge-backpack:client:syncBackpacks', function(src, profiles)
+pr_lib.callback.register('forge-backpack:client:syncBackpacks', function(profiles)
     applySyncData({ profiles = profiles })
 end)
 
-pr_lib.callback.register("forge-backpack:client:printInventorySnippet", function(src, modelName, modelData)
+pr_lib.callback.register("forge-backpack:client:printInventorySnippet", function(modelName, modelData)
     if type(modelName) ~= "string" or modelName == "" then return end
 
     local oxSnippet = forgeBackpack.BuildOxInventorySnippet(modelName, modelData)
@@ -422,6 +448,7 @@ pr_lib.callback.register("forge-backpack:client:printInventorySnippet", function
 end)
 
 CreateThread(function()
+    RefreshAfterSpawn()
     local data = pr_lib.callback.await('forge-backpack:server:requestSync', 5000)
     if data then
         applySyncData(data)
@@ -433,6 +460,7 @@ function forgeBackpackClient.Preview(bagConfig)
         bagConfig = forgeBackpack.Resolve(bagConfig, BackpackProfiles, ItemModels)
     end
     if not bagConfig then return end
+    previewActive = true
 
     if Config.BackpackStyle == "clothing" then
         ApplyBackpackClothing(bagConfig)
@@ -442,7 +470,9 @@ function forgeBackpackClient.Preview(bagConfig)
 end
 
 function forgeBackpackClient.ResetPreview()
+    previewActive = false
     ResetBackpack()
+    RefreshBackpack()
 end
 
 function forgeBackpackClient.Refresh()
@@ -455,9 +485,9 @@ pr_lib.addCommand('debugmochila', {
     print(lang("debug.debug_title"))
     print(lang("debug.active_bridge", { bridge = tostring(pr_lib.activeBridges.inventory) }))
     
-    local success, clientItems = pcall(function() return exports.ox_inventory:Items() end)
+    local success, clientItems = pcall(function() return pr_lib.inventory.Items() end)
     if not success then
-        print(lang("debug.error_calling_ox", { error = tostring(clientItems) }))
+        print(lang("debug.error_calling_inventory", { error = tostring(clientItems) }))
     else
         if clientItems and clientItems['large_backpack'] then
             print(lang("debug.item_found", { item = 'large_backpack' }))

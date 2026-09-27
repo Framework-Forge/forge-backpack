@@ -7,6 +7,15 @@ pr_lib.callback.register("forge-backpack:server:buyBackpack", function(src, prof
     local profile = forgeBackpackGetProfile(profileId)
     if not profile then return false end
 
+    local canCarry, _, limit = forgeBackpackCanCarry(src, profile.itemModel, 1)
+    if not canCarry then
+        pr_lib.notifications.Notify(src, {
+            description = lang("notify.backpack_limit", { max = limit or Config.MaxBackpack }),
+            type = "error"
+        })
+        return false
+    end
+
     local price = profile.price or 0
 
     if not pr_lib.framework.takeMoney(src, price, "forge-backpack") then
@@ -164,6 +173,7 @@ pr_lib.addCommand(Config.TestCommand, {
             name = "item_model",
             type = "string",
             help = lang("command.testemochila_item"),
+            optional = true,
         },
         {
             name = "profile",
@@ -213,6 +223,15 @@ pr_lib.addCommand(Config.TestCommand, {
     if profile.itemModel ~= itemModel then
         pr_lib.notifications.Notify(source, {
             description = lang("notify.profile_model_mismatch"),
+            type = "error"
+        })
+        return
+    end
+
+    local canCarry, _, limit = forgeBackpackCanCarry(source, itemModel, 1)
+    if not canCarry then
+        pr_lib.notifications.Notify(source, {
+            description = lang("notify.backpack_limit", { max = limit or Config.MaxBackpack }),
             type = "error"
         })
         return

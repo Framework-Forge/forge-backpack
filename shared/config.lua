@@ -5,6 +5,9 @@ Config.Debug = false
 
 Config.BackpackStyle = "clothing"
 
+-- Quando ativo, limita a quantidade total de mochilas no inventario do player.
+-- Use 0 em MaxBackpack para desativar o limite numerico.
+Config.LimitBackpacks = true
 Config.MaxBackpack = 1
 
 Config.BlacklistItems = {
@@ -26,6 +29,7 @@ Config.BackpackShop = {
 
 Config.AdminCommand = "backpackadmin"
 Config.AdminAce = "forge-backpack.admin"
+Config.ParentAdminAce = "forge-core.admin"
 Config.TestCommand = "testemochila"
 
 -- Itens padrao na primeira instalacao (modelos extras sao criados no admin / JSON)
