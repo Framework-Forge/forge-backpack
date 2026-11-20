@@ -4,7 +4,7 @@ lua54("yes")
 
 author("forge Devs - Pierre Moraes")
 description("Backpack system for FiveM")
-version("1.0.3")
+version("1.0.5")
 
 dependency("pr_bridge")
 
